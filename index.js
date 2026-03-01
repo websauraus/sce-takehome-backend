@@ -8,6 +8,13 @@ const PORT = 3000;
 
 app.use(express.json());
 
+const history = {};
+
+function appendRecord(symbol, record) {
+  history[symbol] ??= [];
+  history[symbol].push(record);
+}
+
 async function getStockQuote(symbol) {
   try {
     const response = await fetch(
@@ -26,7 +33,7 @@ async function getStockQuote(symbol) {
   }
 }
 
-app.post("/start-monitoring", async (req, res) => {
+app.post("/start-monitoring", (req, res) => {
   try {
     const { symbol, minutes, seconds } = req.body;
 
@@ -35,10 +42,13 @@ app.post("/start-monitoring", async (req, res) => {
 
     const interval = 1000 * ((+minutes * 60) + (+seconds));
 
-    const data = await getStockQuote(symbol);
-    console.log(data);
+    setInterval(async () => {
+      const data = await getStockQuote(symbol);
+      appendRecord(symbol, data);
+      console.log(data);
+    }, interval);
 
-    return res.json({ ok: true, interval, quote: data });
+    //return res.json({ ok: true, interval, quote: data });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err.message });
