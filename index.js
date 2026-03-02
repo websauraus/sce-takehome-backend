@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
 
-import express from "express";
+import express from 'express';
 
 const app = express();
 const PORT = 3000;
@@ -28,24 +28,24 @@ async function getStockQuote(symbol) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error fetching stock quote:", error);
+    console.error('Error fetching stock quote:', error);
     throw error;
   }
 }
 
-app.post("/start-monitoring", (req, res) => {
+// need to have return and make it so you can stop the setinterval
+app.post('/start-monitoring', (req, res) => {
   try {
     const { symbol, minutes, seconds } = req.body;
 
-    if (!symbol) return res.status(400).send({ message: "symbol must be a nonempty string" });
-    if (minutes < 0 || seconds < 0) return res.status(400).send({ message: "time cannot be negative" });
+    if (!symbol) return res.status(400).send({ message: 'symbol must be a nonempty string' });
+    if (minutes < 0 || seconds < 0) return res.status(400).send({ message: 'time cannot be negative' });
 
     const interval = 1000 * ((+minutes * 60) + (+seconds));
 
     setInterval(async () => {
-      const data = await getStockQuote(symbol);
-      appendRecord(symbol, data);
-      console.log(data);
+      const quote = await getStockQuote(symbol);
+      appendRecord(symbol, quote);
     }, interval);
 
     //return res.json({ ok: true, interval, quote: data });
@@ -55,10 +55,13 @@ app.post("/start-monitoring", (req, res) => {
   }
 });
 
-/*
-app.get('/history?symbol=<stockSymbol>', (req, res) => {
+
+app.get('/history', (req, res) => {
+  const stockSymbol = req.query.symbol;
+  res.json(history[stockSymbol] ?? []);
 });
 
+/*
 app.post('/refresh', (req, res) => {
 });
 */
